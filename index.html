@@ -1308,6 +1308,73 @@ function stopAllAudio() {
    ALARMTON
    ================================================== */
 
+/* ==================================================
+   LOCKOUT-TON
+   ================================================== */
+
+function playLockoutTone() {
+
+  const ctx = getAudioContext();
+
+  if (!ctx) {
+    return;
+  }
+
+  const now = ctx.currentTime;
+
+  const master = ctx.createGain();
+
+  master.gain.value = getVolume() * 0.22;
+
+  master.connect(ctx.destination);
+
+  const notes = [
+    { frequency: 520, start: 0, duration: 0.16 },
+    { frequency: 390, start: 0.22, duration: 0.16 },
+    { frequency: 520, start: 0.44, duration: 0.16 }
+  ];
+
+  notes.forEach(note => {
+
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    const start = now + note.start;
+    const end = start + note.duration;
+
+    oscillator.type = "square";
+
+    oscillator.frequency.setValueAtTime(
+      note.frequency,
+      start
+    );
+
+    gain.gain.setValueAtTime(
+      0.001,
+      start
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.65,
+      start + 0.01
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+      0.001,
+      end
+    );
+
+    oscillator.connect(gain);
+    gain.connect(master);
+
+    oscillator.start(start);
+    oscillator.stop(end);
+
+  });
+
+}
+
+
 function playAlarmTone() {
 
   const ctx =
@@ -1575,6 +1642,8 @@ function startLockout() {
   lockoutBox.classList.add(
     "active"
   );
+
+  playLockoutTone();
 
   updateLockoutDisplay();
 
